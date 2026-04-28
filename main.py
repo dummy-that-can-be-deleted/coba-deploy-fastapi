@@ -17,10 +17,10 @@ def read_root():
     return {
         "message": "Selamat datang di API Barang!",
         "endpoints": {
-            "GET /items": "Mengambil semua barang",
+            "GET  /items": "Mengambil semua barang",
             "POST /items": "Menambahkan barang baru (format JSON)",
-            "POST /items-pydantic": "Menambahkan barang baru dengan Pydantic",
-            "GET /stu-perf": "Mengambil data performa mahasiswa dari CSV",
+            "POST /items-pydantic": "Menambahkan barang baru (format JSON yang lebih ketat)",
+            "GET  /stu-perf": "Mengambil data performa mahasiswa dari CSV",
         },
     }
 
