@@ -1,0 +1,11 @@
+@BASE_URL=http://localhost:8000
+
+###
+
+POST {{BASE_URL}}/items
+Content-Type: application/json
+
+{
+  "nama": "Item 1",
+  "harga": 1000000
+}

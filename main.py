@@ -1,82 +1,91 @@
-# pip install fastapi uvicorn
 import pandas as pd
 from fastapi import FastAPI
 
-# uvicorn main:app --reload
-# --reload ini akan baca file kamu terus terusan
-
-# instance
 app = FastAPI()
 
-
-# URL:       http://localhost:8000/
-# Route: GET                      /
-# Route / Endpoint itu "mirip" = sama aja
-# "/" = root
-@app.get("/")
-def root():
-    """Ini hanyalah untuk percobaan saja
-
-    Returns:
-        - dict: Kuncinya adalah "pesan"
-    """
-
-    # Do something...
-
-    # Apa yang dikembalikan?
-    # Karena ini adalah REST API
-    # Maka yang dikembalikan itu adalah..... JSON
-    # kumpulan dari dict / list
-    return {"pesan": "hello world"}
+# Misalnya ini adalah data awal yang kita punya
+data_barang = [
+    {"id": 1, "nama": "Laptop", "harga": 10000000},
+    {"id": 2, "nama": "Smartphone", "harga": 5000000},
+    {"id": 3, "nama": "Tablet", "harga": 3000000},
+]
 
 
-# URL:       http://localhost:8000/iseng
-# Route: GET                      /iseng
-@app.get("/iseng")
-def get_iseng():
-    return {"hanyalah": "iseng belaka"}
+# GET /items - Mengambil semua barang
+@app.get("/items")
+def get_items():
+    return {"data": data_barang}
 
 
-# URL:       http://localhost:8000/nama/masukkin_nama_kamu
-# Route: GET                      /nama/{name}
-@app.get("/nama/{name}")
-def baca_name(name):
-    # si curly bracket dari @app.get, itu akan menjadi arg di dalam fungsi
-    return {"name": name, "message": f"Halo, nama yang dituliskan adalah {name}"}
-
-
-# URL:       http://localhost:8000/barangs/10
-# Route: GET                      /barangs/{item_id}
-@app.get("/barangs/{item_id}")
-def baca_item_id(item_id: int):  # type hint
-    # Do something
-    print(f"Item id yang didapatkan adalah {item_id}")
-    print(type(item_id))
-
-    return {"id": item_id}
-
-
-# =================
-list_items = []
-
-
-# URL:         http://localhost:8000/items
-# Route: POST  http://localhost:8000/items
+# POST /items - Menambahkan barang baru
 @app.post("/items")
-def tambah_items(nama: dict):
-    print(f"Nama barang adalah {nama}")
+def add_item(item: dict):
+    # Perhatikan di atas, kita menggunakan tipe data dict untuk item.
+    # Ini nanti kalau pakai Postman, kita kirim data langsung dalam format JSON, misalnya:
+    # {
+    #     "nama": "Headphone",
+    #     "harga": 1500000
+    # }
 
-    list_items.append(nama)
-    print(f"List items: {list_items}")
+    # Generate ID baru berdasarkan ID terakhir di data_barang
+    new_id = data_barang[-1]["id"] + 1 if data_barang else 1
+    item["id"] = new_id
 
-    return {"message": "barang berhasil ditambahkan"}
+    # Di sini kita langsung tambahkan item baru ke data_barang
+    data_barang.append(item)
+
+    # Consnya adalah, kita ga bisa akses value nama atau harga di sini
+    # Karena item itu dict, jadi kita harus aksesnya dengan item["nama"] atau item["harga"]
+    print(f"Barang baru ditambahkan: {item['nama']} dengan harga {item['harga']}")
+
+    return {"message": "Barang berhasil ditambahkan", "data": item}
 
 
-@app.get("/pandas")
-def baca_file_csv():
-    # Ini baca dari pandas
-    df = pd.read_csv("./kontrak.csv")
+# Cara alternatifnya adalah dengan menggunakan Pydantic
+# Harus install dulu via perintah `pip install pydantic``
+from pydantic import BaseModel
 
-    print(df)
 
-    return {"message": "Lihat console lebih lanjut", "data": df}
+class Item(BaseModel):
+    nama: str
+    harga: int
+
+
+# POST /items-pydantic - Menambahkan barang baru dengan Pydantic
+@app.post("/items-pydantic")
+def add_item_pydantic(item: Item):
+    new_id = data_barang[-1]["id"] + 1 if data_barang else 1
+
+    # Konversi Pydantic model ke dict untuk nambahin ID
+    item_dict = item.dict()
+    item_dict["id"] = new_id
+
+    # Ujungnya yang ditambahin adalah "dict" yang sudah ada ID-nya
+    data_barang.append(item_dict)
+
+    # Di sini kita bisa akses item.nama dan item.harga secara lansgung.
+    print(f"Barang baru ditambahkan: {item.nama} dengan harga {item.harga}")
+
+    return {"message": "Barang berhasil ditambahkan", "data": item_dict}
+
+
+# GET /stu-perf - Contoh endpoint untuk mengambil data performa mahasiswa
+@app.get("/stu-perf")
+def get_student_performance():
+    # 1. Tahap Baca data (CSV)
+    df = pd.read_csv("students-performance.csv")
+
+    # Di pagi tadi awalnya "Series" (banyak baris, cuma 1 kolom),
+    # Sekarang kita pakai "DataFrame" (tabel, banyak baris banyak kolom)
+
+    # 2. Tahap Modifikasi DataFrame
+    df_mod = df[["gender", "math score", "reading score", "writing score"]]
+    df_mod["average score"] = (
+        df_mod[["math score", "reading score", "writing score"]].mean(axis=1).round(2)
+    )
+
+    # 3. Tahap Konversi DataFrame ke List of Dicts
+    data = df_mod.to_dict(orient="records")
+
+    # Baru bisa kita return data yang sudah dalam format list of dicts
+    return {"data": data}
