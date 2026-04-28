@@ -11,6 +11,20 @@ data_barang = [
 ]
 
 
+# GET / - Endpoint root untuk kasih tahu ada routing apa saja
+@app.get("/")
+def read_root():
+    return {
+        "message": "Selamat datang di API Barang!",
+        "endpoints": {
+            "GET /items": "Mengambil semua barang",
+            "POST /items": "Menambahkan barang baru (format JSON)",
+            "POST /items-pydantic": "Menambahkan barang baru dengan Pydantic",
+            "GET /stu-perf": "Mengambil data performa mahasiswa dari CSV",
+        },
+    }
+
+
 # GET /items - Mengambil semua barang
 @app.get("/items")
 def get_items():
@@ -83,6 +97,7 @@ def get_student_performance():
     df_mod["average score"] = (
         df_mod[["math score", "reading score", "writing score"]].mean(axis=1).round(2)
     )
+    df_mod = df_mod.head(100)  # Comot 100 data pertama saja
 
     # 3. Tahap Konversi DataFrame ke List of Dicts
     data = df_mod.to_dict(orient="records")
