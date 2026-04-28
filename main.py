@@ -1,4 +1,5 @@
 # pip install fastapi uvicorn
+import pandas as pd
 from fastapi import FastAPI
 
 # uvicorn main:app --reload
@@ -69,3 +70,13 @@ def tambah_items(nama: dict):
     print(f"List items: {list_items}")
 
     return {"message": "barang berhasil ditambahkan"}
+
+
+@app.get("/pandas")
+def baca_file_csv():
+    # Ini baca dari pandas
+    df = pd.read_csv("./kontrak.csv")
+
+    print(df)
+
+    return {"message": "Lihat console lebih lanjut", "data": df}
